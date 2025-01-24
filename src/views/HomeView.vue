@@ -34,6 +34,14 @@
         <label :for="tag">{{ tag }}</label>
       </div>
     </div>
+    <div class="search">
+      <input class="search__input" type="text" v-model="searchQuery" @input="onInput" placeholder="Search...">
+      <div class="search__wrapper" v-if="searchResult.length >0">
+        <div class="search__item" v-for="(item, index) in searchResult" :key="index">
+          {{ item.name }}
+        </div>
+      </div>
+    </div>
     </div>
     <CanvasTemplates :checkedTags="checkedTags"/>
   </main>
@@ -60,6 +68,9 @@ export default {
     let templateHeight = ref(0);
     let selectedFile = null;
     let tags = ref(null);
+    let searchQuery = ref("");
+    let searchResult = ref([]);
+    let timeout = null
     let checkedTags = ref([])
     const token = computed(() => {
         return users?.getUser?.token || JSON.parse(localStorage.getItem("User")).token;
@@ -118,6 +129,27 @@ export default {
       })
     }
 
+    const onInput = function() {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        search(searchQuery.value);
+        
+      }, 500);
+    }
+    const search = function(query) {
+      if (searchQuery.value <= 0) {
+        searchResult.value.length = 0
+        return
+      }
+      axios.get(`https://dev-api.aiscreen.io/api/v1/canvas_templates/library?filter%5Bname%5D=${query}`,{
+        headers:{
+          "authorization": `Bearer ${token.value}`
+          }
+      }).then((response) => {
+        searchResult.value = response.data
+        
+      })
+    }
     const templates = computed(() => {
         return templatesStore.getTemplates;
     })
@@ -125,7 +157,7 @@ export default {
     getTemplates();
     getTemplatesTags();
 
-    return {submit, templateTagsStrings, templateName, uploadImage, templateWidth, templateHeight, tags, checkedTags}
+    return {submit, templateTagsStrings, templateName, uploadImage, templateWidth, templateHeight, tags, checkedTags, searchQuery, onInput, searchResult}
   }
 }
 </script>
@@ -138,5 +170,19 @@ main {
 }
 .wrapper {
   display: flex;
+}
+
+.search {
+  margin-left: 50px;
+  position: relative;
+}
+.search__input {
+  width: 400px
+}
+.search__wrapper {
+  border: 1px solid black;
+}
+.search__item {
+  border-bottom: 1px solid black;
 }
 </style>
