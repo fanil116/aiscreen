@@ -28,6 +28,7 @@
          <button>Отправить</button>
       </form>
     </div>
+    <div v-if="dataUpdate" class="modal">Данные обновлены</div>
   </div>
 </template>
 
@@ -51,6 +52,7 @@
       let templateHeight = ref(0);
       let templateId = route.query.id;
       let selectedFile = null;
+      let dataUpdate = ref(false);
       const token = computed(() => {
         return users?.getUser?.token || JSON.parse(localStorage.getItem("User")).token;
     })
@@ -94,6 +96,11 @@
                 "authorization": `Bearer ${token.value}`
             }
         });
+        getCurrentTemplate();
+        dataUpdate.value = true;
+        setTimeout(() => {
+          dataUpdate.value = false;
+        }, 1500);
       } catch (error) {
         errors.setErrorText(error.message);
         errors.setVisibleError(true);
@@ -101,13 +108,21 @@
     }
 
       getCurrentTemplate();
-      return {data, templateWidth, templateHeight, templateTagsStrings, templateName, uploadImage, submit}
+      return {data, templateWidth, templateHeight, templateTagsStrings, templateName, uploadImage, submit, dataUpdate}
     }
   }
 
 </script>
 <style scoped>
   .template__image {
-    width: 100%;
+    width: 400px;
+  }
+  .modal {
+    position: fixed;
+    top: 10%;
+    left: 35%;
+    background: black;
+    color: white;
+    padding: 20px;
   }
 </style>
